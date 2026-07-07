@@ -1,0 +1,73 @@
+name: Build & Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'           # trigger on version tags like v1.0.0
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.0'
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Rename APKs with version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          # fallback to commit SHA if not a tag
+          if [[ "$VERSION" != v* ]]; then
+            VERSION="build-${{ github.run_number }}"
+          fi
+          cd build/app/outputs/flutter-apk
+          for f in app-*-release.apk; do
+            mv "$f" "unzolo-crm-${VERSION}-${f#app-}"
+          done
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unzolo-crm-apk
+          path: build/app/outputs/flutter-apk/unzolo-crm-*.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Unzolo CRM ${{ github.ref_name }}
+          body: |
+            ## Unzolo CRM ${{ github.ref_name }}
+
+            ### Download
+            Pick the APK for your device architecture:
+            - **arm64-v8a** — most modern phones (64-bit)
+            - **armeabi-v7a** — older/32-bit phones
+            - **x86_64** — emulators
+          files: build/app/outputs/flutter-apk/unzolo-crm-*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,6 +7,7 @@ import '../../core/app_routes.dart';
 import '../../core/widgets/premium_filter_chip.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../core/state/unzolo_state.dart';
+import '../../core/responsive_utils.dart';
 
 class ManageEnquiriesPage extends ConsumerStatefulWidget {
   const ManageEnquiriesPage({super.key});
@@ -166,7 +167,7 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
           isLoading: enquiriesAsync.isLoading,
           skeleton: const EnquiriesSkeleton(),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

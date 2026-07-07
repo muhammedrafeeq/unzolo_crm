@@ -4,6 +4,7 @@ import '../../core/app_colors.dart';
 import '../../core/app_routes.dart';
 
 import '../../core/widgets/skeleton_loader.dart';
+import '../../core/responsive_utils.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -36,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
       isLoading: _isLoading,
       skeleton: const ProfileSkeleton(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -144,8 +145,8 @@ class _ProfilePageState extends State<ProfilePage> {
           Stack(
             children: [
               Container(
-                width: 90,
-                height: 90,
+                width: context.rAvatar(90),
+                height: context.rAvatar(90),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.primary, width: 3),

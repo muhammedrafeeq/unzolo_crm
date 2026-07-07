@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../core/app_colors.dart';
 import '../../core/state/unzolo_state.dart';
+import '../../core/responsive_utils.dart';
 
 class TripExpenseLedgerPage extends ConsumerStatefulWidget {
   const TripExpenseLedgerPage({super.key});
@@ -120,7 +121,7 @@ class _TripExpenseLedgerPageState extends ConsumerState<TripExpenseLedgerPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

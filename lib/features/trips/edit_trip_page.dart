@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/app_colors.dart';
+import '../../core/responsive_utils.dart';
 
 class EditTripPage extends StatefulWidget {
   const EditTripPage({super.key});
@@ -202,7 +203,7 @@ class _EditTripPageState extends State<EditTripPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
           child: Form(
             key: _formKey,
             child: Column(

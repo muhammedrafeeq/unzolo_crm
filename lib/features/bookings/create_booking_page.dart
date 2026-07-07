@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_routes.dart';
 import '../../core/state/unzolo_state.dart';
+import '../../core/responsive_utils.dart';
 
 class CreateBookingPage extends ConsumerStatefulWidget {
   const CreateBookingPage({super.key});
@@ -342,7 +343,7 @@ class _CreateBookingPageState extends ConsumerState<CreateBookingPage> {
         child: trip == null 
             ? const Center(child: Text('No Trips Available.'))
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

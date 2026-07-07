@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/app_colors.dart';
 import '../../core/state/unzolo_state.dart';
 import '../../core/widgets/offline_banner.dart';
+import '../../core/responsive_utils.dart';
 import '../trips/select_trip_page.dart';
 import '../bookings/manage_bookings_page.dart';
 import '../leads/leads_customers_page.dart';
@@ -70,7 +71,7 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -106,7 +107,7 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
       top: false,
       bottom: true,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+        margin: EdgeInsets.fromLTRB(context.hPad, 4, context.hPad, 12),
         height: 64,
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,

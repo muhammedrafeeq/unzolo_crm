@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_routes.dart';
 import '../../core/state/unzolo_state.dart';
+import '../../core/responsive_utils.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -50,7 +51,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: 32.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -58,14 +59,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo / Header
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      'assets/icon.png',
-                      width: 96,
-                      height: 96,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const Icon(LucideIcons.mountain, size: 64, color: AppColors.primary),
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/icon.png',
+                        width: context.logoSize,
+                        height: context.logoSize,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(LucideIcons.mountain, size: context.rScale(52), color: AppColors.primary),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -7,6 +7,7 @@ import '../../core/widgets/premium_filter_chip.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../core/utils/pointer_lock.dart';
 import '../../core/state/unzolo_state.dart';
+import '../../core/responsive_utils.dart';
 
 class SelectTripPage extends ConsumerStatefulWidget {
   const SelectTripPage({super.key});
@@ -230,7 +231,7 @@ class _SelectTripPageState extends ConsumerState<SelectTripPage> {
       isLoading: tripsAsync.isLoading,
       skeleton: const TripsSkeleton(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

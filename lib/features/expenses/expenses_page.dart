@@ -5,6 +5,7 @@ import '../../core/app_colors.dart';
 import '../../core/app_routes.dart';
 import '../../core/state/unzolo_state.dart';
 import '../../core/widgets/skeleton_loader.dart';
+import '../../core/responsive_utils.dart';
 
 class ExpensesPage extends ConsumerWidget {
   const ExpensesPage({super.key});
@@ -22,7 +23,7 @@ class ExpensesPage extends ConsumerWidget {
       isLoading: isLoading,
       skeleton: const ExpensesSkeleton(),
       child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -5,6 +5,7 @@ import '../../core/app_colors.dart';
 import '../../core/app_routes.dart';
 import '../../core/state/unzolo_state.dart';
 import '../../core/widgets/skeleton_loader.dart';
+import '../../core/responsive_utils.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -28,7 +29,7 @@ class DashboardPage extends ConsumerWidget {
       isLoading: isLoading,
       skeleton: const DashboardSkeleton(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -176,10 +177,10 @@ class DashboardPage extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: context.rAvatar(44),
+            height: context.rAvatar(44),
             decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Icon(icon, color: iconColor, size: context.rScale(22)),
           ),
           const SizedBox(width: 12),
           Expanded(

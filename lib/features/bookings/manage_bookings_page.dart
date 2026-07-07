@@ -6,6 +6,7 @@ import '../../core/app_routes.dart';
 import '../../core/widgets/premium_filter_chip.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../core/state/unzolo_state.dart';
+import '../../core/responsive_utils.dart';
 
 class ManageBookingsPage extends ConsumerStatefulWidget {
   const ManageBookingsPage({super.key});
@@ -273,7 +274,7 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
       isLoading: bookingsAsync.isLoading,
       skeleton: const BookingsSkeleton(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

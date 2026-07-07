@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_theme.dart';
 import 'core/app_routes.dart';
@@ -65,17 +66,25 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
 
-    return MaterialApp(
-      title: 'Unzolo CRM',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      initialRoute: authState.isLoggedIn ? AppRoutes.dashboard : AppRoutes.login,
-      navigatorObservers: [PointerLockNavigatorObserver()],
-      onGenerateRoute: (settings) {
-        final builder = AppRoutes.routes[settings.name];
-        if (builder == null) return null;
-
-        return MaterialPageRoute(builder: builder, settings: settings);
+    return ScreenUtilInit(
+      // Design baseline: 375×812 (iPhone 11 logical pixels)
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (_, _) {
+        return MaterialApp(
+          title: 'Unzolo CRM',
+          debugShowCheckedModeBanner: false,
+          // Theme is created inside builder so .sp/.w/.h are available
+          theme: AppTheme.lightTheme,
+          initialRoute: authState.isLoggedIn ? AppRoutes.dashboard : AppRoutes.login,
+          navigatorObservers: [PointerLockNavigatorObserver()],
+          onGenerateRoute: (settings) {
+            final builder = AppRoutes.routes[settings.name];
+            if (builder == null) return null;
+            return MaterialPageRoute(builder: builder, settings: settings);
+          },
+        );
       },
     );
   }

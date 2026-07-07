@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/state/unzolo_state.dart';
 import '../../core/widgets/skeleton_loader.dart';
+import '../../core/responsive_utils.dart';
 
 class CustomersPage extends ConsumerStatefulWidget {
   const CustomersPage({super.key});
@@ -101,7 +102,7 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
       isLoading: customersAsync.isLoading,
       skeleton: const CustomersSkeleton(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.symmetric(horizontal: context.hPad, vertical: context.vPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -185,8 +186,8 @@ class _CustomersPageState extends ConsumerState<CustomersPage> {
                           children: [
                             CircleAvatar(
                               backgroundColor: AppColors.primaryContainer,
-                              radius: 22,
-                              child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                              radius: context.rAvatar(22),
+                              child: Text(initial, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: context.rScale(16))),
                             ),
                             const SizedBox(width: 16),
                             Expanded(

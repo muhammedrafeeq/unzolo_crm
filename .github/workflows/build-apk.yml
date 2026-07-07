@@ -2,8 +2,10 @@ name: Build & Release APK
 
 on:
   push:
+    branches:
+      - main           # run on every push to main
     tags:
-      - 'v*'           # trigger on version tags like v1.0.0
+      - 'v*'           # also trigger on version tags like v1.0.0
   workflow_dispatch:   # allow manual trigger from GitHub UI
 
 jobs:
@@ -43,21 +45,20 @@ jobs:
           fi
           echo "Patching $LUCIDE_DIR"
 
-          # Replace every: = LucideIconData(0xABCD)
-          # With:          = IconData(0xABCD, fontFamily: 'LucideIcons', fontPackage: 'lucide_icons')
-          find "$LUCIDE_DIR" -name "*.dart" -exec \
-            sed -i "s/LucideIconData(0x\([0-9a-fA-F]*\))/IconData(0x\1, fontFamily: 'LucideIcons', fontPackage: 'lucide_icons')/g" {} \;
+          # Replace LucideIconData(0xNNNN) with IconData(0xNNNN, fontFamily:..., fontPackage:...)
+          # This works because IconData's own constructor is still const-compatible
+          find "$LUCIDE_DIR/lib" -name "*.dart" | while read f; do
+            sed -i "s/LucideIconData(0x\([0-9a-fA-F]\{1,\}\))/IconData(0x\1, fontFamily: 'LucideIcons', fontPackage: 'lucide_icons')/g" "$f"
+          done
 
-          # Stub out icon_data.dart — the class is no longer needed
-          cat > "$LUCIDE_DIR/lib/src/icon_data.dart" << 'EOF'
-          // Patched for Flutter 3.44.5: IconData is final, LucideIconData removed.
-          // All icon constants now use IconData(...) directly.
-          EOF
+          # Stub icon_data.dart — LucideIconData class definition no longer needed
+          printf '// patched: LucideIconData removed, icons use IconData directly\n' \
+            > "$LUCIDE_DIR/lib/src/icon_data.dart"
 
           echo "Patch complete"
 
       - name: Build release APK
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
 
       - name: Rename APKs with version
         run: |

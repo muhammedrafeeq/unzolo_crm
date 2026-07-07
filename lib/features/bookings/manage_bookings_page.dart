@@ -17,8 +17,8 @@ class ManageBookingsPage extends ConsumerStatefulWidget {
 class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedStatus = 'All';
-  String _selectedTripId = 'all';
   String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -229,6 +229,7 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
     final bookingsAsync = ref.watch(bookingsProvider);
     final bookingsList = bookingsAsync.value ?? [];
     final trips = ref.watch(tripsProvider).value ?? [];
+    final selectedTripId = ref.watch(bookingsTripFilterProvider);
 
     // Calculate Stats
     double totalCollected = 0.0;
@@ -262,8 +263,8 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
       final matchesStatus = _selectedStatus == 'All' ||
           b['status'].toString().toLowerCase() == _selectedStatus.toLowerCase();
 
-      final matchesTrip = _selectedTripId == 'all' ||
-          b['tripId'].toString() == _selectedTripId;
+      final matchesTrip = selectedTripId == 'all' ||
+          b['tripId'].toString() == selectedTripId;
 
       return matchesQuery && matchesStatus && matchesTrip;
     }).toList();
@@ -305,22 +306,17 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
             ),
             const SizedBox(height: 24),
 
-            // Trip filter options
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.outlineVariant),
-              ),
-              padding: const EdgeInsets.all(4),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildTripOption('all', 'All'),
-                    ...trips.map((t) => _buildTripOption(t['id'] as String, t['title'] as String)),
+            // Trip filter + Expenses row
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildTripSelectorCard(trips, selectedTripId)),
+                  if (selectedTripId != 'all') ...[
+                    const SizedBox(width: 10),
+                    _buildExpensesCard(trips, selectedTripId),
                   ],
-                ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -405,28 +401,135 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
     );
   }
 
-  Widget _buildTripOption(String id, String label) {
-    final isActive = _selectedTripId == id;
+  Widget _buildExpensesCard(List<Map<String, dynamic>> trips, String selectedTripId) {
+    final trip = trips.where((t) => t['id'] == selectedTripId).firstOrNull;
+    if (trip == null) return const SizedBox.shrink();
     return GestureDetector(
-      onTap: () => setState(() => _selectedTripId = id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.only(right: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      onTap: () => Navigator.pushNamed(context, AppRoutes.tripExpenseLedger, arguments: trip),
+      child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.primaryContainer.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
         ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            fontFamily: 'Manrope',
-            color: isActive ? Colors.white : AppColors.onSurfaceVariant,
-          ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(LucideIcons.coins, size: 20, color: AppColors.primary),
+            SizedBox(height: 6),
+            Text('Expenses', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary, fontFamily: 'Manrope')),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTripSelectorCard(List<Map<String, dynamic>> trips, String selectedTripId) {
+    final selectedTrip = selectedTripId == 'all' ? null : trips.where((t) => t['id'] == selectedTripId).firstOrNull;
+    return GestureDetector(
+      onTap: () => _showTripSelectorSheet(trips),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: selectedTrip != null ? AppColors.primary : AppColors.outlineVariant),
+        ),
+        child: Row(
+          children: [
+            Icon(LucideIcons.map, size: 18, color: selectedTrip != null ? AppColors.primary : AppColors.outline),
+            const SizedBox(width: 12),
+            Expanded(
+              child: selectedTrip == null
+                  ? const Text('All Trips', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Manrope'))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(selectedTrip['title'] ?? '', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Space Grotesk')),
+                        Text(selectedTrip['location'] ?? '', style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                      ],
+                    ),
+            ),
+            Icon(LucideIcons.chevronsUpDown, size: 16, color: AppColors.outline),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTripSelectorSheet(List<Map<String, dynamic>> trips) {
+    final currentId = ref.read(bookingsTripFilterProvider);
+    final grouped = <String, List<Map<String, dynamic>>>{};
+    for (final t in trips) {
+      final cat = t['category'] as String? ?? 'Other';
+      grouped.putIfAbsent(cat, () => []).add(t);
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 48, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(color: AppColors.outlineVariant, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Select Trip', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontFamily: 'Space Grotesk')),
+                IconButton(icon: const Icon(LucideIcons.x, size: 20), onPressed: () => Navigator.pop(context)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(LucideIcons.layers, color: AppColors.primary),
+              title: const Text('All Trips', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Manrope')),
+              selected: currentId == 'all',
+              selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              onTap: () { ref.read(bookingsTripFilterProvider.notifier).set('all'); Navigator.pop(context); },
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: grouped.entries.map((entry) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(entry.key.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.outline, fontFamily: 'JetBrains Mono')),
+                      ),
+                      ...entry.value.map((t) => ListTile(
+                        leading: const Icon(LucideIcons.map, color: AppColors.primary, size: 18),
+                        title: Text(t['title'] ?? '', style: const TextStyle(fontSize: 14, fontFamily: 'Manrope', fontWeight: FontWeight.w600)),
+                        subtitle: Text(t['location'] ?? '', style: const TextStyle(fontSize: 12)),
+                        selected: currentId == t['id'],
+                        selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        onTap: () { ref.read(bookingsTripFilterProvider.notifier).set(t['id'] as String); Navigator.pop(context); },
+                      )),
+                    ],
+                  )).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
     );

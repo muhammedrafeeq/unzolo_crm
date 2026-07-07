@@ -262,11 +262,17 @@ class TripsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
 
   Future<void> deleteTrip(String id) async {
     final trip = (state.value ?? []).firstWhere((t) => t['id'] == id);
-    final updated = (state.value ?? []).where((t) => t['id'] != id).toList();
+    final updated = (state.value ?? []).where((t) => t['id'] != id).cast<Map<String, dynamic>>().toList();
     state = AsyncData(updated);
     await _saveCache(updated);
     ref.read(deletedTripsProvider.notifier).addDeleted(trip);
     await _write(table: 'trips', operation: 'update', data: {'is_deleted': true}, matchColumn: 'id', matchValue: id);
+  }
+
+  Future<void> addRestoredTrip(Map<String, dynamic> trip) async {
+    final updated = <Map<String, dynamic>>[trip, ...state.value ?? []];
+    state = AsyncData(updated);
+    await _saveCache(updated);
   }
 
   Future<void> syncNow() => _syncFromServer();
@@ -301,10 +307,11 @@ class DeletedTripsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }
 
   Future<void> restoreTrip(String id) async {
+    final trip = (state.value ?? []).firstWhere((t) => t['id'] == id);
     final updated = (state.value ?? []).where((t) => t['id'] != id).cast<Map<String, dynamic>>().toList();
     state = AsyncData(updated);
     await LocalCache.save('deleted_trips', updated.map<Map<String, dynamic>>(_tripForCache).toList());
-    ref.read(tripsProvider.notifier).syncNow();
+    ref.read(tripsProvider.notifier).addRestoredTrip(trip);
     await _write(table: 'trips', operation: 'update', data: {'is_deleted': false}, matchColumn: 'id', matchValue: id);
   }
 }
@@ -395,6 +402,12 @@ class BookingsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     await _write(table: 'bookings', operation: 'update', data: row, matchColumn: 'id', matchValue: booking['id'] as String);
   }
 
+  Future<void> addRestoredBooking(Map<String, dynamic> booking) async {
+    final updated = <Map<String, dynamic>>[booking, ...state.value ?? []];
+    state = AsyncData(updated);
+    await LocalCache.save('bookings', updated);
+  }
+
   Future<void> deactivateBooking(String id) async {
     final booking = (state.value ?? []).firstWhere((b) => b['id'] == id);
     final updated = (state.value ?? []).where((b) => b['id'] != id).cast<Map<String, dynamic>>().toList();
@@ -437,10 +450,11 @@ class DeactivatedBookingsNotifier extends AsyncNotifier<List<Map<String, dynamic
   }
 
   Future<void> recoverBooking(String id) async {
+    final booking = (state.value ?? []).firstWhere((b) => b['id'] == id);
     final updated = (state.value ?? []).where((b) => b['id'] != id).cast<Map<String, dynamic>>().toList();
     state = AsyncData(updated);
     await LocalCache.save('deactivated_bookings', updated);
-    ref.read(bookingsProvider.notifier).syncNow();
+    ref.read(bookingsProvider.notifier).addRestoredBooking(booking);
     await _write(table: 'bookings', operation: 'update', data: {'is_active': true, 'status': 'Pending'}, matchColumn: 'id', matchValue: id);
   }
 }
@@ -547,6 +561,28 @@ class CustomersNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
 
   Future<void> syncNow() => _syncFromServer();
 
+  Future<void> updateCustomer(Map<String, dynamic> customer) async {
+    final userId = _db.auth.currentUser?.id;
+    if (userId == null) return;
+    final updated = (state.value ?? []).map<Map<String, dynamic>>((c) => c['id'] == customer['id'] ? customer : c).toList();
+    state = AsyncData(updated);
+    await LocalCache.save('customers', updated);
+    await _write(table: 'customers', operation: 'update', data: {
+      'name': customer['name'],
+      'age': customer['age'],
+      'gender': customer['gender'],
+      'place': customer['place'],
+      'contact': customer['contact'],
+    }, matchColumn: 'id', matchValue: customer['id'] as String);
+  }
+
+  Future<void> deleteCustomer(String id) async {
+    final updated = (state.value ?? []).where((c) => c['id'] != id).cast<Map<String, dynamic>>().toList();
+    state = AsyncData(updated);
+    await LocalCache.save('customers', updated);
+    await _write(table: 'customers', operation: 'delete', data: {}, matchColumn: 'id', matchValue: id);
+  }
+
   Future<void> addCustomer(Map<String, dynamic> customer) async {
     final userId = _db.auth.currentUser?.id;
     if (userId == null) return;
@@ -571,6 +607,15 @@ class CustomersNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
 
 final customersProvider =
     AsyncNotifierProvider<CustomersNotifier, List<Map<String, dynamic>>>(() => CustomersNotifier());
+
+class BookingsTripFilterNotifier extends Notifier<String> {
+  @override
+  String build() => 'all';
+  void set(String tripId) => state = tripId;
+}
+
+final bookingsTripFilterProvider =
+    NotifierProvider<BookingsTripFilterNotifier, String>(() => BookingsTripFilterNotifier());
 
 // ==========================================
 // 6. ENQUIRIES STATE

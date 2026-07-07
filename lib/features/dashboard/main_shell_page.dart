@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/app_colors.dart';
+import '../../core/state/unzolo_state.dart';
 import '../../core/widgets/offline_banner.dart';
 import '../trips/select_trip_page.dart';
 import '../bookings/manage_bookings_page.dart';
-import '../enquiries/manage_enquiries_page.dart';
-import '../expenses/expenses_page.dart';
-import '../customers/customers_page.dart';
+import '../leads/leads_customers_page.dart';
 import 'dashboard_page.dart';
 
-class MainShellPage extends StatefulWidget {
+class MainShellPage extends ConsumerStatefulWidget {
   final int initialIndex;
   const MainShellPage({super.key, this.initialIndex = 0});
 
   @override
-  State<MainShellPage> createState() => _MainShellPageState();
+  ConsumerState<MainShellPage> createState() => _MainShellPageState();
 }
 
-class _MainShellPageState extends State<MainShellPage> {
+class _MainShellPageState extends ConsumerState<MainShellPage> {
   late int _currentIndex;
   late final PageController _pageController;
 
@@ -57,10 +57,7 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    // Dynamic appBar layout depending on index
-    final bool centerTitle = _currentIndex == 2; // Centered only for bookings
-    final bool showHamburger = _currentIndex == 2 || _currentIndex == 3;
+  PreferredSizeWidget _buildAppBar(String initial) {
 
     return PreferredSize(
       preferredSize: const Size.fromHeight(70),
@@ -68,11 +65,7 @@ class _MainShellPageState extends State<MainShellPage> {
         decoration: const BoxDecoration(
           color: AppColors.surfaceContainerLowest,
           boxShadow: [
-            BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 10,
-              offset: Offset(0, 2),
-            ),
+            BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 2)),
           ],
         ),
         child: SafeArea(
@@ -81,65 +74,28 @@ class _MainShellPageState extends State<MainShellPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (centerTitle) ...[
-                  // Bookings centered layout: Hamburger left, Title center, Profile right
-                  IconButton(
-                    icon: const Icon(LucideIcons.menu, color: AppColors.primary),
-                    onPressed: () {},
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppColors.primaryContainer,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  Text(
-                    'Unzolo',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  _buildProfileAvatar(),
-                ] else ...[
-                  // Standard layout: Icon/Avatar left, Title next to it, Action right
-                  Row(
-                    children: [
-                      showHamburger
-                          ? IconButton(
-                              icon: const Icon(LucideIcons.menu, color: AppColors.primary),
-                              onPressed: () {},
-                            )
-                          : _buildProfileAvatar(),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Unzolo',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                ),
+                Text(
+                  'Unzolo',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(LucideIcons.bell, color: AppColors.primary),
-                    onPressed: () {},
-                  ),
-                ],
+                ),
+                IconButton(
+                  icon: const Icon(LucideIcons.bell, color: AppColors.primary),
+                  onPressed: () {},
+                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileAvatar() {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primaryFixed, width: 2),
-        image: const DecorationImage(
-          image: NetworkImage(
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCeMYIWy9aFlr4UmTFih39PaySc11Z6OIwCmxOxNt4bnC-GY2SB3OHzmdt3GjBIHOjSymPmefKyoXdCIQTRm259a0DgVaT2gCbU3nE0amT2Bm-XwPxy4hYEOT43UizPHdqLgsxq2vHm5fXZdrps9AOO1mk-_XPwYiX_yXlDnOa2mHoVqc8ww95HVl6HkKD9J0ClVxLkKGNFei08Xi5H5kOPR2fhJUsxU7b7iJHO9zFzYZBXAEQ2O2Xy-5VLz8ACi-VBtSpkzIhroYyb',
-          ),
-          fit: BoxFit.cover,
         ),
       ),
     );
@@ -155,10 +111,10 @@ class _MainShellPageState extends State<MainShellPage> {
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.outlineVariant.withOpacity(0.4)),
+          border: Border.all(color: AppColors.outlineVariant.withValues(alpha:0.4)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha:0.06),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -169,42 +125,10 @@ class _MainShellPageState extends State<MainShellPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildBottomNavItem(
-                icon: LucideIcons.compass,
-                label: 'Home',
-                isActive: _currentIndex == 0,
-                onTap: () => _onTabSelected(0),
-              ),
-              _buildBottomNavItem(
-                icon: LucideIcons.map,
-                label: 'Trips',
-                isActive: _currentIndex == 1,
-                onTap: () => _onTabSelected(1),
-              ),
-              _buildBottomNavItem(
-                icon: LucideIcons.calendar,
-                label: 'Bookings',
-                isActive: _currentIndex == 2,
-                onTap: () => _onTabSelected(2),
-              ),
-              _buildBottomNavItem(
-                icon: LucideIcons.messageSquare,
-                label: 'Enquiries',
-                isActive: _currentIndex == 3,
-                onTap: () => _onTabSelected(3),
-              ),
-              _buildBottomNavItem(
-                icon: LucideIcons.coins,
-                label: 'Expenses',
-                isActive: _currentIndex == 4,
-                onTap: () => _onTabSelected(4),
-              ),
-              _buildBottomNavItem(
-                icon: LucideIcons.users,
-                label: 'Customers',
-                isActive: _currentIndex == 5,
-                onTap: () => _onTabSelected(5),
-              ),
+              _buildBottomNavItem(icon: LucideIcons.compass, label: 'Home', index: 0),
+              _buildBottomNavItem(icon: LucideIcons.map, label: 'Trips', index: 1),
+              _buildBottomNavItem(icon: LucideIcons.calendar, label: 'Bookings', index: 2),
+              _buildBottomNavItem(icon: LucideIcons.users, label: 'Leads', index: 3),
             ],
           ),
         ),
@@ -212,24 +136,17 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  Widget _buildBottomNavItem({
-    required IconData icon,
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildBottomNavItem({required IconData icon, required String label, required int index}) {
+    final isActive = _currentIndex == index;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => _onTabSelected(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: isActive ? 16 : 12,
-          vertical: 8,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: isActive ? 16 : 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withOpacity(0.08) : Colors.transparent,
+          color: isActive ? AppColors.primary.withValues(alpha:0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: AnimatedSize(
@@ -238,21 +155,12 @@ class _MainShellPageState extends State<MainShellPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: isActive ? AppColors.primary : AppColors.outline,
-                size: 20,
-              ),
+              Icon(icon, color: isActive ? AppColors.primary : AppColors.outline, size: 20),
               if (isActive) ...[
                 const SizedBox(width: 8),
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Manrope',
-                  ),
+                  style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold, fontFamily: 'Manrope'),
                 ),
               ],
             ],
@@ -264,9 +172,12 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final name = authState.name ?? authState.email ?? '';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(initial),
       body: Column(
         children: [
           const OfflineBanner(),
@@ -278,9 +189,7 @@ class _MainShellPageState extends State<MainShellPage> {
                 KeepAliveWrapper(child: DashboardPage()),
                 KeepAliveWrapper(child: SelectTripPage()),
                 KeepAliveWrapper(child: ManageBookingsPage()),
-                KeepAliveWrapper(child: ManageEnquiriesPage()),
-                KeepAliveWrapper(child: ExpensesPage()),
-                KeepAliveWrapper(child: CustomersPage()),
+                KeepAliveWrapper(child: LeadsCustomersPage()),
               ],
             ),
           ),
@@ -293,7 +202,6 @@ class _MainShellPageState extends State<MainShellPage> {
 
 class KeepAliveWrapper extends StatefulWidget {
   final Widget child;
-
   const KeepAliveWrapper({super.key, required this.child});
 
   @override
@@ -310,5 +218,3 @@ class _KeepAliveWrapperState extends State<KeepAliveWrapper> with AutomaticKeepA
     return widget.child;
   }
 }
-
-

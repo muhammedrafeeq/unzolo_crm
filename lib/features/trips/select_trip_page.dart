@@ -243,7 +243,7 @@ class _SelectTripPageState extends ConsumerState<SelectTripPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Find Your Next Ascent',
+                        'Trips',
                         style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                               color: AppColors.onSurface,
                             ),
@@ -425,7 +425,12 @@ class _SelectTripPageState extends ConsumerState<SelectTripPage> {
   }
 
   Widget _buildTripCard(Map<String, dynamic> trip) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        ref.read(bookingsTripFilterProvider.notifier).set(trip['id'] as String);
+        Navigator.pushNamed(context, AppRoutes.manageBookings);
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -648,6 +653,7 @@ class _SelectTripPageState extends ConsumerState<SelectTripPage> {
             ],
           ),
         ],
+      ),
       ),
     );
   }

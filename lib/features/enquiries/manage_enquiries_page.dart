@@ -139,19 +139,7 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
       return matchesQuery && matchesStatus;
     }).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Enquiry Board',
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontFamily: 'Manrope'),
-        ),
-        backgroundColor: AppColors.surfaceContainerLowest,
-        elevation: 0.5,
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SkeletonLoader(
+    return SkeletonLoader(
           isLoading: enquiriesAsync.isLoading,
           skeleton: const EnquiriesSkeleton(),
           child: SingleChildScrollView(
@@ -256,9 +244,7 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
               ],
             ),
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildFollowUpAlertWidget(List<Map<String, dynamic>> leads) {
@@ -472,7 +458,7 @@ class _AddLeadBottomSheetState extends State<_AddLeadBottomSheet> {
         left: 24,
         right: 24,
         top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 44,
       ),
       child: Form(
         key: _formKey,
@@ -547,7 +533,7 @@ class _AddLeadBottomSheetState extends State<_AddLeadBottomSheet> {
               const SizedBox(height: 12),
 
               DropdownButtonFormField<String>(
-                value: _status,
+                initialValue: _status,
                 style: const TextStyle(fontSize: 14, color: AppColors.onSurface),
                 decoration: const InputDecoration(labelText: 'Lead Temperature Priority'),
                 items: const [
@@ -571,9 +557,10 @@ class _AddLeadBottomSheetState extends State<_AddLeadBottomSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   decoration: BoxDecoration(border: Border.all(color: AppColors.outlineVariant), borderRadius: BorderRadius.circular(8)),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       const Icon(LucideIcons.calendarDays, size: 18, color: AppColors.primary),
+                      const SizedBox(width: 8),
                       Text(
                         _followUp == null ? 'Set Follow-up Date Reminder' : DateFormat('yyyy-MM-dd').format(_followUp!),
                         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),

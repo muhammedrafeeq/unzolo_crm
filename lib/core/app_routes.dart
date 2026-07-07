@@ -6,6 +6,7 @@ import '../features/trips/edit_trip_page.dart';
 import '../features/trips/create_trip_page.dart';
 import '../features/expenses/trip_expense_ledger_page.dart';
 import '../features/profile/profile_page.dart';
+import '../features/trips/trip_bookings_page.dart';
 import '../features/auth/login_page.dart';
 import '../features/auth/signup_page.dart';
 import '../features/auth/forgot_password_page.dart';
@@ -29,6 +30,7 @@ class AppRoutes {
   static const String expenses = '/expenses';
   static const String tripExpenseLedger = '/trip-expense-ledger';
   static const String customers = '/customers';
+  static const String tripBookings = '/trip-bookings';
 
   static Map<String, WidgetBuilder> get routes => {
     login: (context) => const LoginPage(),
@@ -45,8 +47,9 @@ class AppRoutes {
     enquiries: (context) => const MainShellPage(initialIndex: 3),
     editTrip: (context) => const EditTripPage(),
     createTrip: (context) => const CreateTripPage(),
-    expenses: (context) => const MainShellPage(initialIndex: 4),
+    expenses: (context) => const MainShellPage(initialIndex: 3),
     tripExpenseLedger: (context) => const TripExpenseLedgerPage(),
-    customers: (context) => const MainShellPage(initialIndex: 5),
+    customers: (context) => const MainShellPage(initialIndex: 3),
+    tripBookings: (context) => const TripBookingsPage(),
   };
 }

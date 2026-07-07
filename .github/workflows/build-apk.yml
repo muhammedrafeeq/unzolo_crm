@@ -58,18 +58,16 @@ jobs:
           echo "Patch complete"
 
       - name: Build release APK
-        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
+        run: flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 
-      - name: Rename APKs with version
+      - name: Rename APK with version
         run: |
           VERSION="${{ github.ref_name }}"
           if [[ "$VERSION" != v* ]]; then
             VERSION="build-${{ github.run_number }}"
           fi
-          cd build/app/outputs/flutter-apk
-          for f in app-*-release.apk; do
-            mv "$f" "unzolo-crm-${VERSION}-${f#app-}"
-          done
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/unzolo-crm-${VERSION}.apk
 
       - name: Upload APK as artifact
         uses: actions/upload-artifact@v4
@@ -87,10 +85,7 @@ jobs:
             ## Unzolo CRM ${{ github.ref_name }}
 
             ### Download
-            Pick the APK for your device architecture:
-            - **arm64-v8a** — most modern phones (64-bit)
-            - **armeabi-v7a** — older/32-bit phones
-            - **x86_64** — emulators
+            Single APK for all modern Android phones (arm64).
           files: build/app/outputs/flutter-apk/unzolo-crm-*.apk
           draft: false
           prerelease: false

@@ -28,7 +28,7 @@ jobs:
         with:
           flutter-version: '3.44.5'
           channel: stable
-          cache: true
+          cache: false
 
       - name: Get dependencies
         run: flutter pub get
@@ -45,11 +45,19 @@ jobs:
           fi
           echo "Patching $LUCIDE_DIR"
 
-          # Replace LucideIconData(0xNNNN) with IconData(0xNNNN, fontFamily:..., fontPackage:...)
-          # This works because IconData's own constructor is still const-compatible
+          # Pass 1: replace original LucideIconData(0xNNNN) constructor calls
           find "$LUCIDE_DIR/lib" -name "*.dart" | while read f; do
             sed -i "s/LucideIconData(0x\([0-9a-fA-F]\{1,\}\))/IconData(0x\1, fontFamily: 'Lucide', fontPackage: 'lucide_icons')/g" "$f"
           done
+
+          # Pass 2: fix any stale cached patch that used the wrong font family name
+          find "$LUCIDE_DIR/lib" -name "*.dart" | while read f; do
+            sed -i "s/fontFamily: 'LucideIcons'/fontFamily: 'Lucide'/g" "$f"
+          done
+
+          # Verify the patch worked
+          echo "Sample patched line:"
+          grep -m1 "IconData(0x" "$LUCIDE_DIR/lib/lucide_icons.dart" || echo "WARNING: patch may not have applied"
 
           # Stub icon_data.dart — LucideIconData class definition no longer needed
           printf '// patched: LucideIconData removed, icons use IconData directly\n' \

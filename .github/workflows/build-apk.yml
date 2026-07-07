@@ -48,7 +48,7 @@ jobs:
           # Replace LucideIconData(0xNNNN) with IconData(0xNNNN, fontFamily:..., fontPackage:...)
           # This works because IconData's own constructor is still const-compatible
           find "$LUCIDE_DIR/lib" -name "*.dart" | while read f; do
-            sed -i "s/LucideIconData(0x\([0-9a-fA-F]\{1,\}\))/IconData(0x\1, fontFamily: 'LucideIcons', fontPackage: 'lucide_icons')/g" "$f"
+            sed -i "s/LucideIconData(0x\([0-9a-fA-F]\{1,\}\))/IconData(0x\1, fontFamily: 'Lucide', fontPackage: 'lucide_icons')/g" "$f"
           done
 
           # Stub icon_data.dart — LucideIconData class definition no longer needed

@@ -24,44 +24,12 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.5'
+          flutter-version: '3.29.3'
           channel: stable
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
-
-      - name: Upgrade lucide_icons to Flutter-compatible version
-        run: flutter pub upgrade lucide_icons
-
-      - name: Patch lucide_icons if IconData is final
-        run: |
-          FILE=$(find $HOME/.pub-cache -path "*/lucide_icons*/lib/src/icon_data.dart" | head -1)
-          if [ -n "$FILE" ] && grep -q "extends IconData" "$FILE"; then
-            echo "Patching lucide_icons IconData (Flutter final class workaround)"
-            cat > "$FILE" << 'PATCH'
-          import 'package:flutter/widgets.dart';
-
-          class LucideIconData implements IconData {
-            const LucideIconData(this.codePoint)
-                : fontFamily = 'LucideIcons',
-                  fontPackage = 'lucide_icons',
-                  matchTextDirection = false;
-
-            @override
-            final int codePoint;
-            @override
-            final String? fontFamily;
-            @override
-            final String? fontPackage;
-            @override
-            final bool matchTextDirection;
-          }
-          PATCH
-            echo "Patch applied."
-          else
-            echo "No patch needed."
-          fi
 
       - name: Build release APK
         run: flutter build apk --release --split-per-abi

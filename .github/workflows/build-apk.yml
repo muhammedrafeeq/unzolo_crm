@@ -24,12 +24,37 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.3'
+          flutter-version: '3.44.5'
           channel: stable
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
+
+      # Flutter 3.44.5 made IconData a final class so lucide_icons can't extend it.
+      # Patch: replace every LucideIconData(0xNNNN) call with an inline IconData(...)
+      # and stub out the icon_data.dart file so nothing tries to define the class.
+      - name: Patch lucide_icons for Flutter 3.44.5 compatibility
+        run: |
+          LUCIDE_DIR=$(find "$HOME/.pub-cache" -type d -name "lucide_icons-*" | head -1)
+          if [ -z "$LUCIDE_DIR" ]; then
+            echo "lucide_icons not found in pub cache, skipping patch"
+            exit 0
+          fi
+          echo "Patching $LUCIDE_DIR"
+
+          # Replace every: = LucideIconData(0xABCD)
+          # With:          = IconData(0xABCD, fontFamily: 'LucideIcons', fontPackage: 'lucide_icons')
+          find "$LUCIDE_DIR" -name "*.dart" -exec \
+            sed -i "s/LucideIconData(0x\([0-9a-fA-F]*\))/IconData(0x\1, fontFamily: 'LucideIcons', fontPackage: 'lucide_icons')/g" {} \;
+
+          # Stub out icon_data.dart — the class is no longer needed
+          cat > "$LUCIDE_DIR/lib/src/icon_data.dart" << 'EOF'
+          // Patched for Flutter 3.44.5: IconData is final, LucideIconData removed.
+          // All icon constants now use IconData(...) directly.
+          EOF
+
+          echo "Patch complete"
 
       - name: Build release APK
         run: flutter build apk --release --split-per-abi
@@ -37,7 +62,6 @@ jobs:
       - name: Rename APKs with version
         run: |
           VERSION="${{ github.ref_name }}"
-          # fallback to commit SHA if not a tag
           if [[ "$VERSION" != v* ]]; then
             VERSION="build-${{ github.run_number }}"
           fi

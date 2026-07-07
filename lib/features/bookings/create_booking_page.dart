@@ -1045,7 +1045,7 @@ class _PaymentDrawerState extends State<_PaymentDrawer> {
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

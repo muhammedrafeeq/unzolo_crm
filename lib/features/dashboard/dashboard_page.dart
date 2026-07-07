@@ -63,7 +63,7 @@ class DashboardPage extends ConsumerWidget {
                 Expanded(
                   child: _buildStatCard(
                     context,
-                    title: 'ACTIVE BOOKINGS',
+                    title: 'BOOKINGS',
                     value: '${activeBookings.length}',
                     icon: LucideIcons.ticket,
                     iconBgColor: AppColors.secondaryContainer,
@@ -90,9 +90,9 @@ class DashboardPage extends ConsumerWidget {
                 Expanded(
                   child: _buildActionCard(
                     context,
-                    label: 'My Trips',
+                    label: 'Trips',
                     icon: LucideIcons.map,
-                    isSecondary: true,
+                    isPrimary: true,
                     onTap: () => Navigator.pushNamed(context, AppRoutes.selectTrip),
                   ),
                 ),
@@ -102,42 +102,8 @@ class DashboardPage extends ConsumerWidget {
                     context,
                     label: 'Create Trip',
                     icon: LucideIcons.plus,
-                    isTertiary: true,
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.createTrip),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    label: 'Expenses',
-                    icon: LucideIcons.coins,
                     isPrimary: true,
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.expenses),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    label: 'Customers',
-                    icon: LucideIcons.users,
-                    isSecondary: true,
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.customers),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    label: 'Enquiries',
-                    icon: LucideIcons.messageSquare,
-                    isTertiary: true,
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.enquiries),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.createTrip),
                   ),
                 ),
               ],
@@ -248,7 +214,6 @@ class DashboardPage extends ConsumerWidget {
     required IconData icon,
     bool isPrimary = false,
     bool isSecondary = false,
-    bool isTertiary = false,
     required VoidCallback onTap,
   }) {
     Color bgColor = AppColors.surfaceContainerLowest;

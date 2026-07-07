@@ -97,6 +97,29 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
     });
   }
 
+  void _showEditLeadBottomSheet(Map<String, dynamic> enq) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return _EditLeadBottomSheet(
+          existing: enq,
+          onSave: (updated) async {
+            final messenger = ScaffoldMessenger.of(context);
+            await ref.read(enquiriesProvider.notifier).updateEnquiry(updated);
+            messenger.showSnackBar(const SnackBar(content: Text('Lead updated!')));
+          },
+          onDelete: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            await ref.read(enquiriesProvider.notifier).deleteEnquiry(enq['id'] as String);
+            messenger.showSnackBar(const SnackBar(content: Text('Lead deleted.')));
+          },
+        );
+      },
+    );
+  }
+
   void _showAddLeadBottomSheet() {
     Future.delayed(Duration.zero, () {
       if (!mounted) return;
@@ -307,7 +330,9 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
     final isConverted = status == 'Converted';
     final isCancelled = status == 'Cancelled';
 
-    return Card(
+    return GestureDetector(
+      onTap: () => _showEditLeadBottomSheet(enq),
+      child: Card(
       color: AppColors.surfaceContainerLowest,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
@@ -399,6 +424,7 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -458,7 +484,7 @@ class _AddLeadBottomSheetState extends State<_AddLeadBottomSheet> {
         left: 24,
         right: 24,
         top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 44,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
       child: Form(
         key: _formKey,
@@ -603,6 +629,212 @@ class _AddLeadBottomSheetState extends State<_AddLeadBottomSheet> {
                     child: const Text('Record Lead'),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditLeadBottomSheet extends StatefulWidget {
+  final Map<String, dynamic> existing;
+  final Future<void> Function(Map<String, dynamic>) onSave;
+  final Future<void> Function() onDelete;
+
+  const _EditLeadBottomSheet({required this.existing, required this.onSave, required this.onDelete});
+
+  @override
+  State<_EditLeadBottomSheet> createState() => _EditLeadBottomSheetState();
+}
+
+class _EditLeadBottomSheetState extends State<_EditLeadBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _tripController;
+  late final TextEditingController _msgController;
+  DateTime? _followUp;
+  late String _status;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    _nameController = TextEditingController(text: e['name'] ?? '');
+    _phoneController = TextEditingController(text: e['phone'] ?? '');
+    _emailController = TextEditingController(text: e['email'] ?? '');
+    _tripController = TextEditingController(text: e['trip'] ?? '');
+    _msgController = TextEditingController(text: e['message'] ?? '');
+    _status = e['status'] ?? 'Warm';
+    final fd = e['followUpDate'] as String?;
+    if (fd != null) _followUp = DateTime.tryParse(fd);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _tripController.dispose();
+    _msgController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectFollowUp() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _followUp ?? DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _followUp = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.only(
+        left: 24, right: 24, top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 48, height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(color: AppColors.outlineVariant, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Edit Lead', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontFamily: 'Space Grotesk')),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(LucideIcons.trash2, color: AppColors.error, size: 20),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Delete Lead?'),
+                              content: Text('Remove ${widget.existing['name']} from the lead board?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                                ElevatedButton(
+                                  onPressed: () { Navigator.pop(context); Navigator.pop(context); widget.onDelete(); },
+                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(icon: const Icon(LucideIcons.x, size: 20), onPressed: () => Navigator.pop(context)),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Lead Full Name'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Contact Phone Number'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Email Address'),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _tripController,
+                decoration: const InputDecoration(labelText: 'Trip Expedition Interest'),
+                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _msgController,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Notes / Query details'),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _status,
+                decoration: const InputDecoration(labelText: 'Lead Temperature Priority'),
+                items: const [
+                  DropdownMenuItem(value: 'Hot', child: Text('Hot Temperature')),
+                  DropdownMenuItem(value: 'Warm', child: Text('Warm Temperature')),
+                  DropdownMenuItem(value: 'Cold', child: Text('Cold Temperature')),
+                  DropdownMenuItem(value: 'Converted', child: Text('Converted')),
+                  DropdownMenuItem(value: 'Cancelled', child: Text('Cancelled')),
+                ],
+                onChanged: (v) { if (v != null) setState(() => _status = v); },
+              ),
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: _selectFollowUp,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(border: Border.all(color: AppColors.outlineVariant), borderRadius: BorderRadius.circular(8)),
+                  child: Row(
+                    children: [
+                      const Icon(LucideIcons.calendarDays, size: 18, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        _followUp == null ? 'Set Follow-up Date Reminder' : DateFormat('yyyy-MM-dd').format(_followUp!),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    final updated = {
+                      ...widget.existing,
+                      'name': _nameController.text.trim(),
+                      'phone': _phoneController.text.trim(),
+                      'email': _emailController.text.trim().isEmpty ? widget.existing['email'] : _emailController.text.trim(),
+                      'trip': _tripController.text.trim(),
+                      'message': _msgController.text.trim().isEmpty ? widget.existing['message'] : _msgController.text.trim(),
+                      'status': _status,
+                      'followUpDate': _followUp == null ? null : DateFormat('yyyy-MM-dd').format(_followUp!),
+                    };
+                    widget.onSave(updated);
+                    Navigator.pop(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 52),
+                ),
+                child: const Text('Save Changes'),
               ),
             ],
           ),

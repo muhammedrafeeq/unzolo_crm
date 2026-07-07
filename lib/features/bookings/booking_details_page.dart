@@ -703,7 +703,7 @@ class _AddPaymentDrawerContentState extends State<_AddPaymentDrawerContent> {
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1024,7 +1024,7 @@ class _EditTravelersDrawerContentState extends State<_EditTravelersDrawerContent
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1202,7 +1202,7 @@ class _CancellationDrawerContentState extends State<_CancellationDrawerContent> 
     return Padding(
       padding: EdgeInsets.only(
         left: 24, right: 24, top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
       child: SingleChildScrollView(
         child: Column(

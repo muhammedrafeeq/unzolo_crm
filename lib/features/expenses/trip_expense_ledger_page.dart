@@ -385,7 +385,7 @@ class _AddExpenseBottomSheetState extends State<_AddExpenseBottomSheet> {
         left: 24,
         right: 24,
         top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 50,
       ),
       child: Form(
         key: _formKey,

@@ -69,7 +69,16 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(LucideIcons.userPlus, size: 48, color: AppColors.primary),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/icon.png',
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(LucideIcons.userPlus, size: 48, color: AppColors.primary),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Create Account',

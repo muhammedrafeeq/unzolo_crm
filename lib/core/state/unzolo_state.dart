@@ -695,6 +695,30 @@ class EnquiriesNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     await LocalCache.save('enquiries', updated.map<Map<String, dynamic>>(_enquiryForCache).toList());
     await _write(table: 'enquiries', operation: 'update', data: {'status': status}, matchColumn: 'id', matchValue: id);
   }
+
+  Future<void> updateEnquiry(Map<String, dynamic> enquiry) async {
+    final id = enquiry['id'] as String;
+    final updated = (state.value ?? []).map<Map<String, dynamic>>((e) => e['id'] == id ? enquiry : e).toList();
+    state = AsyncData(updated);
+    await LocalCache.save('enquiries', updated.map<Map<String, dynamic>>(_enquiryForCache).toList());
+    await _write(table: 'enquiries', operation: 'update', data: {
+      'name': enquiry['name'],
+      'email': enquiry['email'],
+      'phone': enquiry['phone'],
+      'trip': enquiry['trip'],
+      'message': enquiry['message'],
+      'status': enquiry['status'],
+      'follow_up_date': enquiry['followUpDate'],
+      'priority': enquiry['priority'],
+    }, matchColumn: 'id', matchValue: id);
+  }
+
+  Future<void> deleteEnquiry(String id) async {
+    final updated = (state.value ?? []).where((e) => e['id'] != id).toList();
+    state = AsyncData(updated);
+    await LocalCache.save('enquiries', updated.map<Map<String, dynamic>>(_enquiryForCache).toList());
+    await _write(table: 'enquiries', operation: 'delete', data: {}, matchColumn: 'id', matchValue: id);
+  }
 }
 
 final enquiriesProvider =

@@ -58,7 +58,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo / Header
-                  const Icon(LucideIcons.mountain, size: 64, color: AppColors.primary),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/icon.png',
+                      width: 96,
+                      height: 96,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(LucideIcons.mountain, size: 64, color: AppColors.primary),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'UNZOLO CRM',

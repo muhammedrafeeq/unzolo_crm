@@ -108,10 +108,12 @@ class _EditTripPageState extends State<EditTripPage> {
           statusText = const Color(0xFF383D41);
       }
 
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       final updatedTrip = {
+        'id': args?['id'],
         'title': _titleController.text.trim(),
         'location': _locationController.text.trim(),
-        'price': priceText,
+        'price': double.tryParse(priceText.replaceAll(',', '')) ?? 0.0,
         'duration': _durationController.text.trim(),
         'difficulty': _selectedDifficulty,
         'description': _descriptionController.text.trim(),

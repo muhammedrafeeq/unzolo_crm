@@ -90,7 +90,12 @@ class OfflineQueue {
   /// Executes all queued ops against Supabase.
   /// Returns the number of successfully flushed operations.
   static Future<int> flush() async {
-    final db = Supabase.instance.client;
+    late final SupabaseClient db;
+    try {
+      db = Supabase.instance.client;
+    } catch (_) {
+      return 0;
+    }
     final ops = await _load();
     if (ops.isEmpty) return 0;
 

@@ -101,7 +101,7 @@ class _SelectTripPageState extends ConsumerState<SelectTripPage> {
     list.sort((a, b) {
       int comparison = 0;
       if (_sortBy == 'price') {
-        comparison = (a['price'] as int).compareTo(b['price'] as int);
+        comparison = (a['price'] as num).compareTo(b['price'] as num);
       } else if (_sortBy == 'title') {
         comparison = (a['title'] as String).compareTo(b['title'] as String);
       } else {
@@ -602,7 +602,7 @@ class _SelectTripPageState extends ConsumerState<SelectTripPage> {
                             onPressed: () async {
                               final deleted = ref.read(deletedTripsProvider).value ?? [];
                               if (deleted.isNotEmpty) {
-                                await ref.read(deletedTripsProvider.notifier).restoreTrip(deleted.last['id']);
+                                await ref.read(deletedTripsProvider.notifier).restoreTrip(deleted.first['id']);
                               }
                             },
                           ),

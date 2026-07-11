@@ -364,7 +364,7 @@ class _AddExpenseBottomSheetState extends State<_AddExpenseBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.categories.first;
+    _selectedCategory = widget.categories.isNotEmpty ? widget.categories.first : 'All';
   }
 
   @override

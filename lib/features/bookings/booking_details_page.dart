@@ -35,6 +35,7 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
 
   void _copyToClipboard(String text) {
     Clipboard.setData(ClipboardData(text: text)).then((_) {
+      if (!mounted) return;
       setState(() {
         _copied = true;
       });
@@ -52,7 +53,7 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
     if (booking['transactions'] == null) return 0.0;
     double sum = 0.0;
     for (var tx in booking['transactions']) {
-      final isRefund = (tx['type'] as String?)?.toLowerCase() == 'refund';
+      final isRefund = (tx['type'] as String? ?? '').toLowerCase() == 'refund';
       if (!isRefund) sum += (tx['amount'] as num).toDouble();
     }
     return sum;
@@ -62,14 +63,14 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
     if (booking['transactions'] == null) return 0.0;
     double sum = 0.0;
     for (var tx in booking['transactions']) {
-      final isRefund = (tx['type'] as String?)?.toLowerCase() == 'refund';
+      final isRefund = (tx['type'] as String? ?? '').toLowerCase() == 'refund';
       if (isRefund) sum += (tx['amount'] as num).toDouble();
     }
     return sum;
   }
 
   double _getTotalAmount(Map<String, dynamic> booking) {
-    final amtStr = (booking['amount'] as String).replaceAll('₹', '').replaceAll(',', '');
+    final amtStr = (booking['amount']?.toString() ?? '').replaceAll('₹', '').replaceAll(',', '');
     return double.tryParse(amtStr) ?? 1000.0;
   }
 
@@ -281,7 +282,7 @@ class _BookingDetailsPageState extends ConsumerState<BookingDetailsPage> {
     final bookings = ref.watch(bookingsProvider).value ?? [];
     final activeBooking = bookings.firstWhere(
       (b) => b['id'] == _bookingId,
-      orElse: () => _fallbackBooking ?? bookings.first,
+      orElse: () => _fallbackBooking ?? (bookings.isNotEmpty ? bookings.first : {}),
     );
 
     final double total = _getTotalAmount(activeBooking);
@@ -786,7 +787,7 @@ class _AddPaymentDrawerContentState extends State<_AddPaymentDrawerContent> {
           InkWell(
             onTap: () {
               setState(() {
-                _screenshotName = 'receipt_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}.png';
+                _screenshotName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.png';
               });
             },
             borderRadius: BorderRadius.circular(12),
@@ -1304,7 +1305,7 @@ class _CancellationDrawerContentState extends State<_CancellationDrawerContent> 
             // Screenshot (optional)
             InkWell(
               onTap: () => setState(() {
-                _screenshot = 'refund_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}.png';
+                _screenshot = 'refund_${DateTime.now().millisecondsSinceEpoch}.png';
               }),
               borderRadius: BorderRadius.circular(12),
               child: Container(

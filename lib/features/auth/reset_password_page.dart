@@ -41,7 +41,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     super.dispose();
   }
 
-  void _handleReset() {
+  Future<void> _handleReset() async {
     if (_formKey.currentState!.validate()) {
       if (_otpController.text != '123456') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -53,15 +53,25 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
         return;
       }
 
-      // Mock update and log in
-      ref.read(authProvider.notifier).login(_email, _passwordController.text);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset successful! Logging you in...'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.dashboard, (route) => false);
+      try {
+        await ref.read(authProvider.notifier).login(_email, _passwordController.text);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset successful! Logging you in...'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.dashboard, (route) => false);
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login failed. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 

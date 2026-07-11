@@ -48,7 +48,7 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
   }
 
   double _getTotalAmount(Map<String, dynamic> booking) {
-    final amtStr = (booking['amount'] as String).replaceAll('₹', '').replaceAll(',', '');
+    final amtStr = (booking['amount']?.toString() ?? '').replaceAll('₹', '').replaceAll(',', '');
     return double.tryParse(amtStr) ?? 1000.0;
   }
 
@@ -190,7 +190,7 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
                       children: [
                         const Text('Total Manifest Count:', style: TextStyle(fontSize: 12)),
                         Text(
-                          '${bookings.fold<int>(0, (sum, b) => sum + (b['membersCount'] as int? ?? 1))}',
+                          '${bookings.fold<int>(0, (sum, b) => sum + ((b['membersCount'] as num?)?.toInt() ?? 1))}',
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.primary),
                         ),
                       ],
@@ -246,7 +246,7 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
       pendingBalances += (total - paid);
 
       if (b['status'] == 'Confirmed' || b['status'] == 'Completed') {
-        confirmedSlots += (b['membersCount'] as int? ?? 0);
+        confirmedSlots += ((b['membersCount'] as num?)?.toInt() ?? 0);
       }
 
       if (paid >= total) {
@@ -685,7 +685,7 @@ class _ManageBookingsPageState extends ConsumerState<ManageBookingsPage> {
                               onPressed: () async {
                                 final deactivated = ref.read(deactivatedBookingsProvider).value ?? [];
                                 if (deactivated.isNotEmpty) {
-                                  await ref.read(deactivatedBookingsProvider.notifier).recoverBooking(deactivated.last['id']);
+                                  await ref.read(deactivatedBookingsProvider.notifier).recoverBooking(deactivated.first['id']);
                                 }
                               },
                             ),

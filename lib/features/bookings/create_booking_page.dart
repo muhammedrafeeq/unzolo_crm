@@ -193,8 +193,10 @@ class _CreateBookingPageState extends ConsumerState<CreateBookingPage> {
   }
 
   Future<void> _completeBooking(double amountPaid, String method, String type, String? screenshot) async {
-    final trip = _selectedTrip ?? (ref.read(tripsProvider).value ?? []).first;
-    final String bookingId = '#SP-${10000 + DateTime.now().millisecond}-UN';
+    final tripsList = ref.read(tripsProvider).value ?? [];
+    final trip = _selectedTrip ?? (tripsList.isNotEmpty ? tripsList.first : null);
+    if (trip == null) return;
+    final String bookingId = '#SP-${DateTime.now().millisecondsSinceEpoch}-UN';
 
     // Build members list
     final List<Map<String, String>> members = [];
@@ -1153,7 +1155,7 @@ class _PaymentDrawerState extends State<_PaymentDrawer> {
           InkWell(
             onTap: () {
               setState(() {
-                _screenshotName = 'receipt_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}.png';
+                _screenshotName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.png';
               });
             },
             borderRadius: BorderRadius.circular(12),

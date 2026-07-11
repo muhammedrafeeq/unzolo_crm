@@ -71,7 +71,7 @@ class _ManageEnquiriesPageState extends ConsumerState<ManageEnquiriesPage> {
     if (trips.isNotEmpty) {
       prefillTrip = trips.firstWhere(
         (t) => t['title'].toString().toLowerCase().contains(enquiry['trip'].toString().toLowerCase()),
-        orElse: () => trips.first,
+        orElse: () => trips.isNotEmpty ? trips.first : {},
       );
     }
 

@@ -21,7 +21,7 @@ class TripBookingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trip = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final trip = (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ?? {};
     final bookingsAsync = ref.watch(bookingsProvider);
     final allBookings = bookingsAsync.value ?? [];
     final tripBookings = allBookings.where((b) => b['tripId'] == trip['id']).toList();

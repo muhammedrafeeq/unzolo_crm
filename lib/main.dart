@@ -13,12 +13,18 @@ void main() async {
   Future.delayed(const Duration(milliseconds: 1500), () {
     unlockCanvasPointers();
   });
-  await Supabase.initialize(
-    url: 'https://csnwknyuvynkndsqqeso.supabase.co',
-    publishableKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzbndrbnl1dnlua25kc3FxZXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MDA0NTUsImV4cCI6MjA5ODk3NjQ1NX0.Tx9eqXeCcWbj7K6s6moQXu4dxtiC1rGJKaJFw6h93Io',
-  );
-  await preloadOfflineAuth();
+  try {
+    await Supabase.initialize(
+      url: 'https://csnwknyuvynkndsqqeso.supabase.co',
+      publishableKey:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzbndrbnl1dnlua25kc3FxZXNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MDA0NTUsImV4cCI6MjA5ODk3NjQ1NX0.Tx9eqXeCcWbj7K6s6moQXu4dxtiC1rGJKaJFw6h93Io',
+    );
+  } catch (_) {
+    // Supabase init failed (e.g. first-run with no connectivity) — app runs in offline mode
+  }
+  try {
+    await preloadOfflineAuth();
+  } catch (_) {}
   runApp(
     const ProviderScope(
       child: MyApp(),

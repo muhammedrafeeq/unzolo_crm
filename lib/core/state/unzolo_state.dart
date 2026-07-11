@@ -1,3 +1,4 @@
+import 'dart:async' show StreamSubscription, unawaited;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +7,7 @@ import '../local_cache.dart';
 import '../offline_queue.dart';
 import 'connectivity_provider.dart';
 
-final _db = Supabase.instance.client;
+SupabaseClient get _db => Supabase.instance.client;
 
 // ==========================================
 // OFFLINE-FIRST MUTATION HELPER
@@ -100,20 +101,30 @@ Future<AuthState?> _loadAuthCache() async {
 }
 
 class AuthNotifier extends Notifier<AuthState> {
+  StreamSubscription? _authSub;
+
   @override
   AuthState build() {
-    // Check Supabase session (available offline if token not yet expired)
-    final session = _db.auth.currentSession;
-    if (session != null) {
-      final user = session.user;
+    ref.onDispose(() => _authSub?.cancel());
+
+    late final dynamic currentSession;
+    try {
+      currentSession = _db.auth.currentSession;
+    } catch (_) {
+      // Supabase not initialized (e.g. failed init on older device) — go offline
+      return _cachedOfflineAuth ?? const AuthState(isLoggedIn: false);
+    }
+
+    if (currentSession != null) {
+      final user = currentSession.user;
       final name = (user.userMetadata?['name'] as String?) ?? 'Agent';
-      // Persist so we can restore offline even after token expiry
-      _saveAuthCache(user.email ?? '', name, user.id);
-      // Listen for Supabase auth changes but ignore sign-out when offline
-      _db.auth.onAuthStateChange.listen((event) async {
+      unawaited(_saveAuthCache(user.email ?? '', name, user.id));
+      // Cancel any previous listener before registering a new one
+      _authSub?.cancel();
+      _authSub = _db.auth.onAuthStateChange.listen((event) async {
         if (event.event == AuthChangeEvent.signedOut) {
           final online = await isOnlineNow();
-          if (!online) return; // stay logged in offline
+          if (!online) return;
           await _clearAuthCache();
           state = const AuthState(isLoggedIn: false);
         } else if (event.event == AuthChangeEvent.tokenRefreshed) {
@@ -126,13 +137,14 @@ class AuthNotifier extends Notifier<AuthState> {
       });
       return AuthState(isLoggedIn: true, email: user.email, name: name, userId: user.id);
     }
-        // No live session — fall back to pre-loaded offline auth cache
+    // No live session — fall back to pre-loaded offline auth cache
     return _cachedOfflineAuth ?? const AuthState(isLoggedIn: false);
   }
 
   Future<void> login(String email, String password) async {
     final response = await _db.auth.signInWithPassword(email: email, password: password);
-    final user = response.user!;
+    final user = response.user;
+    if (user == null) throw Exception('Login failed: no user returned');
     final name = (user.userMetadata?['name'] as String?) ?? 'Agent';
     await _saveAuthCache(user.email ?? '', name, user.id);
     state = AuthState(isLoggedIn: true, email: user.email, name: name, userId: user.id);
@@ -144,7 +156,8 @@ class AuthNotifier extends Notifier<AuthState> {
       password: password,
       data: {'name': name},
     );
-    final user = response.user!;
+    final user = response.user;
+    if (user == null) throw Exception('Signup failed: no user returned');
     await _saveAuthCache(user.email ?? '', name, user.id);
     state = AuthState(isLoggedIn: true, email: user.email, name: name, userId: user.id);
   }
@@ -261,7 +274,9 @@ class TripsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }
 
   Future<void> deleteTrip(String id) async {
-    final trip = (state.value ?? []).firstWhere((t) => t['id'] == id);
+    final trips = state.value ?? [];
+    final trip = trips.whereType<Map<String, dynamic>>().cast<Map<String, dynamic>?>().firstWhere((t) => t!['id'] == id, orElse: () => null);
+    if (trip == null) return;
     final updated = (state.value ?? []).where((t) => t['id'] != id).cast<Map<String, dynamic>>().toList();
     state = AsyncData(updated);
     await _saveCache(updated);
@@ -303,11 +318,12 @@ class DeletedTripsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   void addDeleted(Map<String, dynamic> trip) {
     final updated = <Map<String, dynamic>>[trip, ...state.value ?? []];
     state = AsyncData(updated);
-    LocalCache.save('deleted_trips', updated.map<Map<String, dynamic>>(_tripForCache).toList());
+    unawaited(LocalCache.save('deleted_trips', updated.map<Map<String, dynamic>>(_tripForCache).toList()));
   }
 
   Future<void> restoreTrip(String id) async {
-    final trip = (state.value ?? []).firstWhere((t) => t['id'] == id);
+    final trip = (state.value ?? []).cast<Map<String, dynamic>?>().firstWhere((t) => t!['id'] == id, orElse: () => null);
+    if (trip == null) return;
     final updated = (state.value ?? []).where((t) => t['id'] != id).cast<Map<String, dynamic>>().toList();
     state = AsyncData(updated);
     await LocalCache.save('deleted_trips', updated.map<Map<String, dynamic>>(_tripForCache).toList());
@@ -339,8 +355,8 @@ Map<String, dynamic> _bookingFromRow(Map<String, dynamic> row) => {
   'concessionAmount': (row['concession_amount'] as num?)?.toDouble() ?? 0.0,
   if (row['rating'] != null) 'rating': row['rating'],
   if (row['stats'] != null) 'stats': row['stats'],
-  'members': (row['members'] as List? ?? []).cast<Map<String, dynamic>>(),
-  'transactions': (row['transactions'] as List? ?? []).cast<Map<String, dynamic>>(),
+  'members': (row['members'] as List? ?? []).whereType<Map<String, dynamic>>().toList(),
+  'transactions': (row['transactions'] as List? ?? []).whereType<Map<String, dynamic>>().toList(),
 };
 
 Map<String, dynamic> _bookingToRow(Map<String, dynamic> b, String userId) => {
@@ -409,8 +425,9 @@ class BookingsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }
 
   Future<void> deactivateBooking(String id) async {
-    final booking = (state.value ?? []).firstWhere((b) => b['id'] == id);
-    final updated = (state.value ?? []).where((b) => b['id'] != id).cast<Map<String, dynamic>>().toList();
+    final booking = (state.value ?? []).whereType<Map<String, dynamic>>().cast<Map<String, dynamic>?>().firstWhere((b) => b!['id'] == id, orElse: () => null);
+    if (booking == null) return;
+    final updated = (state.value ?? []).whereType<Map<String, dynamic>>().where((b) => b['id'] != id).toList();
     state = AsyncData(updated);
     await LocalCache.save('bookings', updated);
     ref.read(deactivatedBookingsProvider.notifier).addDeactivated(booking);
@@ -446,12 +463,13 @@ class DeactivatedBookingsNotifier extends AsyncNotifier<List<Map<String, dynamic
   void addDeactivated(Map<String, dynamic> booking) {
     final updated = <Map<String, dynamic>>[booking, ...state.value ?? []];
     state = AsyncData(updated);
-    LocalCache.save('deactivated_bookings', updated);
+    unawaited(LocalCache.save('deactivated_bookings', updated));
   }
 
   Future<void> recoverBooking(String id) async {
-    final booking = (state.value ?? []).firstWhere((b) => b['id'] == id);
-    final updated = (state.value ?? []).where((b) => b['id'] != id).cast<Map<String, dynamic>>().toList();
+    final booking = (state.value ?? []).whereType<Map<String, dynamic>>().cast<Map<String, dynamic>?>().firstWhere((b) => b!['id'] == id, orElse: () => null);
+    if (booking == null) return;
+    final updated = (state.value ?? []).whereType<Map<String, dynamic>>().where((b) => b['id'] != id).toList();
     state = AsyncData(updated);
     await LocalCache.save('deactivated_bookings', updated);
     ref.read(bookingsProvider.notifier).addRestoredBooking(booking);

@@ -91,8 +91,33 @@ class _MainShellPageState extends ConsumerState<MainShellPage> {
                       ),
                 ),
                 IconButton(
-                  icon: const Icon(LucideIcons.bell, color: AppColors.primary),
-                  onPressed: () {},
+                  icon: const Icon(LucideIcons.logOut, color: AppColors.primary),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Log Out'),
+                        content: const Text('Are you sure you want to log out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                            child: const Text('Log Out'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && mounted) {
+                      await ref.read(authProvider.notifier).logout();
+                      if (mounted) {
+                        Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                      }
+                    }
+                  },
                 ),
               ],
             ),

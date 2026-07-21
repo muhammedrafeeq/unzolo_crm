@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_routes.dart';
-
+import '../../core/state/unzolo_state.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../core/responsive_utils.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _isLoading = true;
 
   @override
@@ -113,7 +114,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: LucideIcons.logOut,
                 title: 'Log Out',
                 isError: true,
-                onTap: () {},
+                onTap: () async {
+                  await ref.read(authProvider.notifier).logout();
+                  if (context.mounted) {
+                    Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+                  }
+                },
               ),
             ]),
             const SizedBox(height: 40),
